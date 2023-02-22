@@ -1,12 +1,20 @@
-//as of 2/13/23 spent 5.75 hours
+//as of 2/21/23, 9 hours
+
+//CHANGELOG 2/20/23
+// added simple platform class
+// added edges variables for all entities
+// added gravity
+// added collision for gravity (WIP)
 
 // ------- TO DO --------
-// finish movement
-// start platforms and or git hub
-
-// next session = code platform, finish movement
-// next next set up github
-// figure out animation flowchart
+// start platform inheritance
+// enemies
+// melee
+//  - hit boxes
+//  - animation/delay
+// ranged attack
+//  - ammo physics?
+//  - hitbox/damage
 
 
 //setting up global vars for manipulating canvas
@@ -17,14 +25,6 @@ const context = canvas.getContext("2d")
 canvas.width = window.innerWidth
 canvas.height = window.innerHeight
 
-
-//need platforms of different types
-    //standard platforms
-    //ground
-    //tall platforms for wall climb and jumps
-    //building platform/wall as boarder for next scenario
-//need enemies
-    //basic goombas for now
 
 //player aka ninja cat
 class Player
@@ -48,33 +48,36 @@ class Player
             y: canvas.height - 100
         }
 
-        //spawn player size 50 x 50
-        context.drawImage(this.cat, this.position.x, this.position.y, 50, 50)
+        //sets/resets edges of player
+        this.edge = 
+        {
+            top: this.position.y,
+            bottom: this.position.y + 50,
+            left: this.position.x,
+            right: this.position.x + 50
+        }
     }
 
     //movement and animations will go here
-    moveLeft() //a = 65
+    moveLeft()
     {
         //could be made into animation loop with frame and break method?
         this.position.x -= 5
     }
-
-    moveRight() //d = 68
+    moveRight()
     {
+        //insert animation for running right
+        
         this.position.x += 5
     }
-
-    jump() //w =87
+    jump()
     {
-        this.position.y -= 5
+        this.position.y -= 30
     }
-
-    crouch() //s = 83
+    crouch()
     {
         this.position.y += 5
     }
-
-
 
     //attacks
     //melee attack
@@ -96,8 +99,7 @@ class Player
     //all movement and abilities(TBD) for player cat
     update()
     {
-        //need dash condition
-
+        //update postition
         if(keys.w.pressed)
             this.jump()
         if(keys.a.pressed)
@@ -105,9 +107,24 @@ class Player
         if(keys.s.pressed)
             this.crouch()
         if(keys.d.pressed)
+        {
             this.moveRight()
+        }
+        if(keys.z.pressed)
+        {
+            this.position.x += 100
+        }
 
+        //update edges of player
+        this.edge = 
+        {
+            top: this.position.y,
+            bottom: this.position.y + 50,
+            left: this.position.x,
+            right: this.position.x + 50
+        }
         //insert idle animation method
+        this.draw()
     }
 
     draw()
@@ -116,11 +133,65 @@ class Player
     }
 }
 
-//insert platform class HERE
+//FOR FUTURE (INHERITANCE)
+//standard plaforms
+//ground platform
+class Platform
+{
+    constructor(x, y, width, height)
+    {
+        //sets up image for platform INSERT LATER
+        // this.platform = new Image()
+        // this.platform.src = "./images/TempCat.png"
+        
+        //set initial position
+        this.position = 
+        {
+            x: x,
+            y: y
+        }
+
+        //set initial dimensions
+        this.width = width
+        this.height = height
+
+        //set edges
+        this.edge = 
+        {
+            top: this.position.y,
+            bottom: this.position.y + height,
+            left: this.position.x,
+            right: this.position.x + width
+        }
+
+        this.draw()
+    }
+
+    draw()
+    {
+        context.fillStyle = "rgba(131, 101, 57)"; 
+        context.fillRect(this.position.x, this.position.y, this.width, this.height)
+    }
+}
+
+
+// INSERT ENEMY CLASS
+
+
+
 
 
 //create player
 const player = new Player()
+
+//testing platforms
+const platforms = []
+platforms[0] = new Platform(0, canvas.height - 50, canvas.width, 50)
+platforms[1] = new Platform(0, canvas.height - 400, canvas.width-500, 50)
+const p2 = new Platform(0, canvas.height - 50, canvas.width, 100)
+
+
+
 
 // ----------------------------------------
 // ------------ KEYBORD INPUTS ------------
@@ -132,7 +203,8 @@ const keys =
     w: {pressed:false},
     a: {pressed:false},
     s: {pressed:false},
-    d: {pressed:false}
+    d: {pressed:false},
+    z: {pressed:false}
 }
 
 //tracking keydown
@@ -151,6 +223,10 @@ addEventListener("keydown", (KeyboardEvent) =>
             break
         case "s":
             keys.s.pressed = true
+            break
+        case "z":
+            keys.z.pressed = true
+
             break
     }
 })
@@ -172,8 +248,42 @@ addEventListener("keyup", (KeyboardEvent) =>
         case "s":
             keys.s.pressed = false
             break
+        case "z":
+            keys.z.pressed = false
+            player.position.x += 250
+            break
     }
 })
+
+
+// GRAVITY for player and enemies
+function gravity(entity, platforms)
+{
+    velocity = 10
+
+    //
+    for(let i = 0; i < platforms.length ; i++)
+    {
+        //if entity is within the platform on x axis
+        //let plafrom left edge = A, platform right edge = B, entity left edge = L, and entity right edge = R
+        //(A<L<B) || (A<R<B)
+        if( (entity.edge.left >= platforms[i].edge.left && entity.edge.left <= platforms[i].edge.right) 
+        || (entity.edge.right >= platforms[i].edge.left && entity.edge.right <= platforms[i].edge.right) )
+        {
+            //gravity collsion
+            if(entity.edge.bottom + velocity > platforms[i].edge.top)
+            {
+                return
+            }
+            else
+            {
+                // entity.position.y += velocity
+            }
+        }
+    }
+    entity.position.y += velocity
+
+}
 
 
 // cancels animation
@@ -184,9 +294,18 @@ function animate()
     context.clearRect(0, 0, canvas.width, canvas.height)
 
     //if statement if keypress is true keep looping certain animation frames, once not true, come back to this?
+    platforms[0].draw()
+    platforms[1].draw()
+    if(keys.z.pressed)
+    {
 
-    player.update()
-    player.draw()
+    }
+    else
+    {
+        player.update()
+        player.draw()
+    }
+    gravity(player, platforms)
 
     //for each player and object, we need to draw and update method
 
