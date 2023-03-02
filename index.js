@@ -1,10 +1,9 @@
-//as of 2/21/23, 9 hours
+//as of 3/2/23, 11 hours
 
-//CHANGELOG 2/20/23
-// added simple platform class
-// added edges variables for all entities
-// added gravity
-// added collision for gravity (WIP)
+// GOALS FOR 3/4/23
+//finish collision for L, R, Top
+//need add entity.height var in Player and fix in gravity()
+//start standardized platforms (might finish next week)
 
 // ------- TO DO --------
 // start platform inheritance
@@ -186,9 +185,13 @@ const player = new Player()
 
 //testing platforms
 const platforms = []
+
+//Platform(x, y, width, height)
 platforms[0] = new Platform(0, canvas.height - 50, canvas.width, 50)
 platforms[1] = new Platform(0, canvas.height - 400, canvas.width-500, 50)
-const p2 = new Platform(0, canvas.height - 50, canvas.width, 100)
+platforms[2] = new Platform(canvas.width - 100, canvas.height - 250, 100, 50)
+platforms[3] = new Platform(canvas.width - 500, canvas.height - 700, 560, 50)
+
 
 
 
@@ -259,7 +262,7 @@ addEventListener("keyup", (KeyboardEvent) =>
 // GRAVITY for player and enemies
 function gravity(entity, platforms)
 {
-    velocity = 10
+    velocity = 7
 
     //
     for(let i = 0; i < platforms.length ; i++)
@@ -270,15 +273,23 @@ function gravity(entity, platforms)
         if( (entity.edge.left >= platforms[i].edge.left && entity.edge.left <= platforms[i].edge.right) 
         || (entity.edge.right >= platforms[i].edge.left && entity.edge.right <= platforms[i].edge.right) )
         {
-            //gravity collsion
-            if(entity.edge.bottom + velocity > platforms[i].edge.top)
+            //in future might need for(each pixel of velocity added) check condition in case velocity passes a thin platform
+            //check if player next frame passes through a platform
+            if(entity.edge.bottom + velocity >= platforms[i].edge.top && entity.edge.bottom + velocity <= platforms[i].edge.bottom)
             {
+                //if pass through platform, set position to top of platform ----------- NEED ENTITY.HEIGHT HERE
+                entity.position.y = platforms[i].edge.top - 50
                 return
             }
-            else
-            {
-                // entity.position.y += velocity
-            }
+            // //gravity collsion
+            // if(entity.edge.bottom + velocity > platforms[i].edge.top)
+            // {
+            //     return
+            // }
+            // else
+            // {
+            //     // entity.position.y += velocity
+            // }
         }
     }
     entity.position.y += velocity
@@ -293,9 +304,13 @@ function animate()
 {
     context.clearRect(0, 0, canvas.width, canvas.height)
 
-    //if statement if keypress is true keep looping certain animation frames, once not true, come back to this?
-    platforms[0].draw()
-    platforms[1].draw()
+    //draw every platform
+    for(let i = 0; i < platforms.length; i++)
+    {
+        platforms[i].draw()
+    }
+
+    //disappear if z is held
     if(keys.z.pressed)
     {
 
