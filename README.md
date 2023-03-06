@@ -36,7 +36,7 @@ NinjaCat is a simple beginner JavaScript project made with HTML Canvas. This pla
 ## Known Bugs
 
 
-## Collaborators
+## Contributors
 
-Michael Huang <br>
-Katrina Beaucage
+Michael Huang (mw-huang)<br>
+Katrina Beaucage (KatBeauDev)

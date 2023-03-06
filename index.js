@@ -1,9 +1,17 @@
-//as of 3/2/23, 11 hours
+//as of 3/5/23, 13
 
-// GOALS FOR 3/4/23
+// GOALS 
 //finish collision for L, R, Top
-//need add entity.height var in Player and fix in gravity()
+//AABB and Raycasting
+//quad tree and spacial hash
+//add platforms for testing
 //start standardized platforms (might finish next week)
+// fix movement player (down/crouch) and CAPS LOCK keyboard inputs
+//clean up PLAYER CLASS INPUTS/MOVEMENTS
+
+// ----- COMPLETED -----
+// fixed issue with player falling through thin platforms
+// added/fixed entity.height and width var for player and gravity
 
 // ------- TO DO --------
 // start platform inheritance
@@ -34,6 +42,10 @@ class Player
         this.cat = new Image()
         this.cat.src = "./images/TempCat.png"
 
+        //variables for width and height
+        this.height = 50
+        this.width = 50
+
         this.spawn()
     }
 
@@ -51,9 +63,9 @@ class Player
         this.edge = 
         {
             top: this.position.y,
-            bottom: this.position.y + 50,
+            bottom: this.position.y + this.height,
             left: this.position.x,
-            right: this.position.x + 50
+            right: this.position.x + this.width
         }
     }
 
@@ -118,9 +130,9 @@ class Player
         this.edge = 
         {
             top: this.position.y,
-            bottom: this.position.y + 50,
+            bottom: this.position.y + this.height,
             left: this.position.x,
-            right: this.position.x + 50
+            right: this.position.x + this.width
         }
         //insert idle animation method
         this.draw()
@@ -128,7 +140,7 @@ class Player
 
     draw()
     {
-        context.drawImage(this.cat, this.position.x, this.position.y, 50, 50)
+        context.drawImage(this.cat, this.position.x, this.position.y, this.width, this.height)
     }
 }
 
@@ -168,7 +180,7 @@ class Platform
 
     draw()
     {
-        context.fillStyle = "rgba(131, 101, 57)"; 
+        context.fillStyle = "rgba(131, 101, 57)"
         context.fillRect(this.position.x, this.position.y, this.width, this.height)
     }
 }
@@ -176,7 +188,9 @@ class Platform
 
 // INSERT ENEMY CLASS
 
-
+// ----------------------------------------
+// ------------ ENTITY TESTING ------------
+// ----------------------------------------
 
 
 
@@ -189,8 +203,8 @@ const platforms = []
 //Platform(x, y, width, height)
 platforms[0] = new Platform(0, canvas.height - 50, canvas.width, 50)
 platforms[1] = new Platform(0, canvas.height - 400, canvas.width-500, 50)
-platforms[2] = new Platform(canvas.width - 100, canvas.height - 250, 100, 50)
-platforms[3] = new Platform(canvas.width - 500, canvas.height - 700, 560, 50)
+platforms[2] = new Platform(canvas.width - 100, 0, 100, canvas.height) //right wall
+platforms[3] = new Platform(canvas.width - 500, canvas.height - 700, 560, 5)
 
 
 
@@ -227,9 +241,9 @@ addEventListener("keydown", (KeyboardEvent) =>
         case "s":
             keys.s.pressed = true
             break
+        //WIP
         case "z":
             keys.z.pressed = true
-
             break
     }
 })
@@ -251,6 +265,7 @@ addEventListener("keyup", (KeyboardEvent) =>
         case "s":
             keys.s.pressed = false
             break
+        //WIP
         case "z":
             keys.z.pressed = false
             player.position.x += 250
@@ -259,12 +274,16 @@ addEventListener("keyup", (KeyboardEvent) =>
 })
 
 
-// GRAVITY for player and enemies
+// ----------------------------------------
+// ------------ SECTION HEADER ------------
+// ----------------------------------------
+
+// gravity and ground platform collision for entities
 function gravity(entity, platforms)
 {
     velocity = 7
 
-    //
+    //for all platforms
     for(let i = 0; i < platforms.length ; i++)
     {
         //if entity is within the platform on x axis
@@ -273,27 +292,20 @@ function gravity(entity, platforms)
         if( (entity.edge.left >= platforms[i].edge.left && entity.edge.left <= platforms[i].edge.right) 
         || (entity.edge.right >= platforms[i].edge.left && entity.edge.right <= platforms[i].edge.right) )
         {
-            //in future might need for(each pixel of velocity added) check condition in case velocity passes a thin platform
-            //check if player next frame passes through a platform
-            if(entity.edge.bottom + velocity >= platforms[i].edge.top && entity.edge.bottom + velocity <= platforms[i].edge.bottom)
+            //check if player next frame passes (falling) through a platform
+            for(let v = 0; v <= velocity; v++)
             {
-                //if pass through platform, set position to top of platform ----------- NEED ENTITY.HEIGHT HERE
-                entity.position.y = platforms[i].edge.top - 50
-                return
+                if(entity.edge.bottom + v >= platforms[i].edge.top && entity.edge.bottom + v <= platforms[i].edge.bottom)
+                {
+                    //if pass through platform, set position to top of platform
+                    entity.position.y = platforms[i].edge.top - entity.height
+                    return
+                }
             }
-            // //gravity collsion
-            // if(entity.edge.bottom + velocity > platforms[i].edge.top)
-            // {
-            //     return
-            // }
-            // else
-            // {
-            //     // entity.position.y += velocity
-            // }
         }
     }
-    entity.position.y += velocity
 
+    entity.position.y += velocity
 }
 
 
@@ -310,6 +322,9 @@ function animate()
         platforms[i].draw()
     }
 
+    //gravity for player (entities future) and platforms
+    gravity(player, platforms)
+
     //disappear if z is held
     if(keys.z.pressed)
     {
@@ -318,11 +333,9 @@ function animate()
     else
     {
         player.update()
-        player.draw()
     }
-    gravity(player, platforms)
 
-    //for each player and object, we need to draw and update method
+
 
     //gives identifier for animation frame
     id = requestAnimationFrame(animate)

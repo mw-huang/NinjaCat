@@ -1,5 +1,9 @@
 # Changelog
 
+## 2023-03-05
+### Fixed
+- Fixed issue with player falling through thin platforms
+
 ## 2023-02-28
 ### Added
 - README file
@@ -11,4 +15,3 @@
 - simple platform class
 - edges variables for all entities
 - gravity
-
